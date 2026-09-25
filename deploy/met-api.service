@@ -1,0 +1,15 @@
+[Unit]
+Description=Met Éireann API (gunicorn)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=met-api
+Group=met-api
+WorkingDirectory=/opt/met-eireann-api
+EnvironmentFile=/etc/met-api.env
+ExecStart=/opt/met-eireann-api/.venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 wsgi:app
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
