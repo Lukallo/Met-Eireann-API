@@ -35,17 +35,21 @@ def _fetcher():
 
 
 def _polled_stations(station_ids):
-    """Registry stations with a live feed, optionally narrowed to ``station_ids``."""
+    """Registry stations with a live feed, optionally narrowed to ``station_ids``.
+
+    Met Éireann's IDs (``dublin``) work as well as ours (``dublin-airport``).
+    """
     polled = [s for s in stations.load_csv() if s["metweb_slug"]]
     if not station_ids:
         return polled
-    known = {s["id"] for s in polled}
-    unknown = sorted(set(station_ids) - known)
+    lookup = {**{s["metweb_slug"]: s for s in polled}, **{s["id"]: s for s in polled}}
+    unknown = sorted(set(station_ids) - set(lookup))
     if unknown:
         raise click.BadParameter(
             f"no live feed for: {', '.join(unknown)}", param_hint="--station"
         )
-    return [s for s in polled if s["id"] in station_ids]
+    chosen = {lookup[i]["id"] for i in station_ids}
+    return [s for s in polled if s["id"] in chosen]
 
 
 station_option = click.option(
@@ -99,6 +103,9 @@ def register(app):
         if save:
             save.mkdir(parents=True, exist_ok=True)
         example = None
+        newest = None          # newest reading time across the "today" feeds
+        rain = {"hourly": 0, "rising": 0}
+        wind_example = None
         for station in _polled_stations(station_ids):
             for feed in upstream.FEEDS:
                 label = f"{station['metweb_slug']}/{feed}"
@@ -128,8 +135,36 @@ def register(app):
                 )
                 if example is None and rows:
                     example = rows[0]
+                if feed == "today":
+                    latest = upstream.latest_local_time(payload)
+                    if latest is not None and (newest is None or latest > newest):
+                        newest = latest
+                pattern = upstream.rainfall_pattern(payload)
+                if pattern:
+                    rain[pattern] += 1
+                if wind_example is None:
+                    wind_example = next((r for r in reversed(rows) if r["wind_speed_kt"]), None)
         if example:
             raw = json.loads(example["raw_json"])
             row = {k: v for k, v in example.items() if k != "raw_json"}
             click.echo("\nEarliest raw record:\n" + json.dumps(raw, indent=2, ensure_ascii=False))
             click.echo("Normalised as:\n" + json.dumps(row, indent=2, ensure_ascii=False))
+
+        click.echo("\nChecks:")
+        status, message = upstream.check_timezone(newest, timeutil.utcnow(), tz)
+        click.echo(f"  {status:7} times: {message}")
+        if rain["hourly"]:
+            click.echo(f"  ok      rainfall: went down during the day in {rain['hourly']} feed(s), "
+                       "so it is the amount per hour, not a running total")
+        elif rain["rising"]:
+            click.echo(f"  warn    rainfall: only ever rose during the day in {rain['rising']} feed(s); "
+                       "it may be a running total, which would make daily totals wrong")
+        else:
+            click.echo("  unknown rainfall: no rain in any feed, so per-hour vs running total "
+                       "can't be told yet")
+        if wind_example:
+            local = timeutil.from_iso(wind_example["observed_at"]).astimezone(timeutil.IRISH_TZ)
+            kt = wind_example["wind_speed_kt"]
+            click.echo(f"  check   wind units: {wind_example['station_id']} at {local:%H:%M} reported "
+                       f"{kt} (read as knots = {round(kt * 1.852)} km/h). Compare with the same "
+                       "hour on met.ie's observations page")

@@ -7,7 +7,8 @@ one object per hour. The known quirks, handled here:
   as placeholder strings such as ``"-"``.
 * There is no timestamp. Each record has a ``date`` and a ``reportTime``
   (``"13:00"``) in Irish local time, with no offset.
-* Wind is in knots, with a cardinal direction (``"SW"``).
+* Wind is in knots, with a cardinal direction (``"SW"``). Degrees are only
+  stored when the feed gives them; they aren't invented from the cardinal point.
 
 The exact format hasn't been checked against a live response yet (run
 ``flask probe``), so parsing is deliberately lenient. Field names are matched
@@ -38,9 +39,8 @@ _MISSING = {"", "-", "--", "n/a", "na", "null", "none", "nan"}
 _NUMBER = re.compile(r"(-?\d+(?:\.\d+)?)\s*[^\d\s]*")
 _CLOCK = re.compile(r"(\d{1,2}):(\d{2})(?::\d{2})?")
 _DATE_FORMATS = ("%d-%m-%Y", "%Y-%m-%d", "%d/%m/%Y")
-_COMPASS = ("N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
-            "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW")
-CARDINAL_DEGREES = {name: i * 22.5 for i, name in enumerate(_COMPASS)}
+COMPASS_POINTS = {"N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+                  "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"}
 
 
 class UpstreamError(Exception):
@@ -132,15 +132,11 @@ def _local_datetime(rec):
     return datetime.combine(day, time(hour, minute))
 
 
-def _wind_direction(rec):
-    """``(degrees, cardinal)``. Degrees come from the record, else from the cardinal point."""
-    cardinal = _text(rec.get("cardinalwinddirection"))
-    if cardinal is not None and cardinal.upper() in CARDINAL_DEGREES:
-        cardinal = cardinal.upper()
-    degrees = _number(rec.get("winddirection"), integer=True)
-    if degrees is None and cardinal in CARDINAL_DEGREES:
-        degrees = _number(CARDINAL_DEGREES[cardinal], integer=True)
-    return degrees, cardinal
+def _cardinal(value):
+    text = _text(value)
+    if text is not None and text.upper() in COMPASS_POINTS:
+        return text.upper()
+    return text  # e.g. "Calm"
 
 
 def normalise(payload, station_id, *, fetched_at, tz="Europe/Dublin"):
@@ -176,19 +172,18 @@ def normalise(payload, station_id, *, fetched_at, tz="Europe/Dublin"):
         fold = 1 if local in seen else 0
         seen.add(local)
         observed = local.replace(tzinfo=zone, fold=fold)
-        degrees, cardinal = _wind_direction(rec)
         rows.append({
             "station_id": station_id,
             "observed_at": to_iso(observed),
             "local_date": local.date().isoformat(),
             "temperature_c": _number(rec.get("temperature")),
             "humidity_pct": _number(rec.get("humidity"), integer=True),
-            "pressure_hpa": _number(rec.get("pressure")),
+            "pressure_msl_hpa": _number(rec.get("pressure")),
             "rainfall_mm": _number(rec.get("rainfall")),
             "wind_speed_kt": _number(rec.get("windspeed"), integer=True),
             "wind_gust_kt": _number(rec.get("windgust"), integer=True),
-            "wind_dir_deg": degrees,
-            "wind_dir_cardinal": cardinal,
+            "wind_dir_deg": _number(rec.get("winddirection"), integer=True),
+            "wind_dir_cardinal": _cardinal(rec.get("cardinalwinddirection")),
             "weather_symbol": _text(rec.get("symbol")),
             "weather_description": _text(rec.get("weatherdescription")) or _text(rec.get("text")),
             "raw_json": json.dumps(raw, ensure_ascii=False, sort_keys=True),
@@ -205,4 +200,60 @@ def missing_fields(payload):
         if isinstance(rec, dict):
             present.update(str(k).lower() for k in rec)
     return [f for f in EXPECTED_FIELDS if f not in present]
+
+
+# --- Checks for `flask probe` -------------------------------------------------
+# These test assumptions that affect every reading and can't be confirmed from
+# the documentation alone.
+
+def latest_local_time(payload):
+    """The newest ``date`` + ``reportTime`` in a feed, as a naive local datetime."""
+    times = [_local_datetime(_lower_keys(r)) for r in payload if isinstance(r, dict)]
+    times = [t for t in times if t is not None]
+    return max(times) if times else None
+
+
+def check_timezone(latest_naive, now_utc, tz="Europe/Dublin"):
+    """Are the feed's times Irish local time? Returns ``(status, message)``.
+
+    In summer Irish time is UTC+1. A feed time later than the current UTC time
+    can only be local time, so that confirms it. In winter the two are equal and
+    the question doesn't matter.
+    """
+    zone = ZoneInfo(tz)
+    now_local = now_utc.astimezone(zone)
+    if latest_naive is None:
+        return "unknown", "no readings to check"
+    if now_local.utcoffset().total_seconds() == 0:
+        return "ok", "Irish time is currently the same as UTC, so the time zone can't be wrong"
+    utc_naive = now_utc.replace(tzinfo=None)
+    local_naive = now_local.replace(tzinfo=None)
+    shown = latest_naive.strftime("%H:%M")
+    if latest_naive > local_naive + timedelta(minutes=5):
+        return "warn", (f"the newest reading ({shown}) is later than the current Irish time "
+                        f"({local_naive:%H:%M}); the time zone setting is probably wrong")
+    if latest_naive > utc_naive:
+        return "ok", (f"the newest reading ({shown}) is later than the current UTC time "
+                      f"({utc_naive:%H:%M}), so the feed uses Irish local time")
+    return "unknown", (f"the newest reading ({shown}) isn't later than the current UTC time "
+                       f"({utc_naive:%H:%M}); run probe again early in an hour to confirm")
+
+
+def rainfall_pattern(payload):
+    """``"hourly"`` if rainfall ever goes down during the day, ``"rising"`` if it only
+    ever goes up (it may be a running total), or ``None`` if there was no rain."""
+    series = []
+    for raw in payload if isinstance(payload, list) else []:
+        if isinstance(raw, dict):
+            rec = _lower_keys(raw)
+            when, amount = _local_datetime(rec), _number(rec.get("rainfall"))
+            if when is not None and amount is not None:
+                series.append((when, amount))
+    amounts = [a for _, a in sorted(series)]
+    steps = list(zip(amounts, amounts[1:]))
+    if any(b < a for a, b in steps):
+        return "hourly"
+    if sum(b > a for a, b in steps) >= 2:
+        return "rising"
+    return None
 

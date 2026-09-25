@@ -37,7 +37,7 @@ def test_strings_become_typed_values():
     first = rows_for(load_fixture("synthetic_athenry_today.json"))[0][0]
     assert first["temperature_c"] == 11.0
     assert first["humidity_pct"] == 93 and isinstance(first["humidity_pct"], int)
-    assert first["pressure_hpa"] == 1012.0
+    assert first["pressure_msl_hpa"] == 1012.0
     assert first["rainfall_mm"] == 0.0
     assert first["wind_speed_kt"] == 9
     assert first["wind_gust_kt"] is None  # "-"
@@ -52,11 +52,12 @@ def test_strings_become_typed_values():
 def test_placeholders_and_wind_edge_cases():
     rows = rows_for(load_fixture("synthetic_athenry_today.json"))[0]
     assert rows[1]["wind_gust_kt"] == 22
-    assert rows[2]["pressure_hpa"] is None       # "n/a"
+    assert rows[2]["pressure_msl_hpa"] is None   # "n/a"
     assert rows[2]["rainfall_mm"] == 0.2
     assert rows[3]["wind_dir_deg"] is None       # "" with a "Calm" cardinal
     assert rows[3]["wind_dir_cardinal"] == "Calm"
-    assert rows[4]["wind_dir_deg"] == 22.5       # derived from "NNE"
+    assert rows[4]["wind_dir_deg"] is None       # not invented from "NNE"
+    assert rows[4]["wind_dir_cardinal"] == "NNE"
     assert rows[4]["humidity_pct"] is None       # "-"
     assert rows[4]["rainfall_mm"] is None        # ""
 
@@ -171,3 +172,36 @@ def test_fetch_errors(session, status):
 def test_fetch_rejects_unknown_feed():
     with pytest.raises(ValueError):
         upstream.fetch("athenry", "tomorrow", base_url="https://x.test")
+
+
+# --- probe checks ------------------------------------------------------------
+
+from datetime import datetime, timezone  # noqa: E402
+
+
+@pytest.mark.parametrize("latest, now, status", [
+    ("2026-09-25 14:00", "2026-09-25T13:20:00", "ok"),       # later than UTC: must be local time
+    ("2026-09-25 13:00", "2026-09-25T13:20:00", "unknown"),  # could be either
+    ("2026-09-25 15:00", "2026-09-25T13:20:00", "warn"),     # later than Irish time: wrong zone
+    ("2026-01-15 13:00", "2026-01-15T13:20:00", "ok"),       # winter: Irish time is UTC
+    (None, "2026-09-25T13:20:00", "unknown"),
+])
+def test_check_timezone(latest, now, status):
+    latest_dt = datetime.fromisoformat(latest) if latest else None
+    now_dt = datetime.fromisoformat(now).replace(tzinfo=timezone.utc)
+    assert upstream.check_timezone(latest_dt, now_dt)[0] == status
+
+
+@pytest.mark.parametrize("amounts, pattern", [
+    (["0.0", "0.4", "0.1", "0.0"], "hourly"),
+    (["0.0", "0.2", "0.5", "0.9"], "rising"),
+    (["0.0", "0.0", "-", "0.0"], None),
+])
+def test_rainfall_pattern(amounts, pattern):
+    payload = [rec("25-09-2026", f"{h:02d}:00", rainfall=a) for h, a in enumerate(amounts)]
+    assert upstream.rainfall_pattern(payload) == pattern
+
+
+def test_latest_local_time():
+    payload = load_fixture("synthetic_athenry_today.json")
+    assert upstream.latest_local_time(payload) == datetime(2026, 9, 25, 4, 0)

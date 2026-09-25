@@ -1,104 +1,104 @@
-id,name,type,lat,lon,elevation_m,county,metweb_slug,station_number
-athenry,Athenry,synoptic,53.289167,-8.785556,,Galway,athenry,
-ballyhaise,Ballyhaise,synoptic,54.051389,-7.309722,,Cavan,ballyhaise,
-belmullet,Belmullet,synoptic,54.2275,-10.006944,,Mayo,belmullet,
-oak-park,Oak Park,synoptic,52.861111,-6.915278,,Carlow,oak-park,
-casement,Casement Aerodrome,synoptic,53.306,-6.439,,Dublin,casement,
-claremorris,Claremorris,synoptic,53.710833,-8.9925,,Mayo,claremorris,
-cork,Cork Airport,synoptic,51.847,-8.486,,Cork,cork,
-dublin,Dublin Airport,synoptic,53.428,-6.241,,Dublin,dublin,
-dunsany,Dunsany,synoptic,53.515833,-6.66,,Meath,dunsany,
-moore-park,Moore Park,synoptic,52.163889,-8.263889,,Cork,moore-park,
-finner,Finner,synoptic,54.493889,-8.243056,,Donegal,finner,
-gurteen,Gurteen,synoptic,53.053056,-8.008611,,Tipperary,gurteen,
-johnstown-castle,Johnstown Castle,synoptic,52.297778,-6.496667,,Wexford,johnstown-castle,
-knock,Knock Airport,synoptic,53.906,-8.817,,Mayo,knock,
-mace-head,Mace Head,synoptic,53.325833,-9.900833,,Galway,mace-head,
-malin-head,Malin Head,synoptic,55.372222,-7.338889,,Donegal,malin-head,
-markree-castle,Markree,synoptic,54.175,-8.455556,,Sligo,markree-castle,
-mt-dillon,Mount Dillon,synoptic,53.726944,-7.980833,,Roscommon,mt-dillon,
-mullingar,Mullingar,synoptic,53.537222,-7.362222,,Westmeath,mullingar,
-newport-furnace,Newport,synoptic,53.922222,-9.572222,,Mayo,newport-furnace,
-phoenix-park,Phoenix Park,synoptic,53.3636,-6.3497,,Dublin,phoenix-park,
-roches-point,Roches Point,synoptic,51.793056,-8.244444,,Cork,roches-point,
-shannon,Shannon Airport,synoptic,52.69,-8.918,,Clare,shannon,
-sherkin-island,Sherkin Island,synoptic,51.476389,-9.427778,,Cork,sherkin-island,
-valentia,Valentia Observatory,synoptic,51.939722,-10.244444,,Kerry,valentia,
-glenveagh-national-park,Glenveagh National Park,automatic,55.051389,-7.9375,,,,8185
-illies-wtp,Illies WTP,automatic,55.150833,-7.348056,,,,8285
-lough-mourne-wtp,Lough Mourne WTP,automatic,54.7675,-7.865,,,,5085
-raphoe-tops,Raphoe (Tops),automatic,54.849722,-7.598889,,,,5185
-ardara-wwtp,Ardara WWTP,automatic,54.769722,-8.420278,,,,4885
-gweedore-weir,Gweedore Weir,automatic,55.049167,-8.230278,,,,4985
-emyvale-wwtp,Emyvale WWTP,automatic,54.336667,-6.955833,,,,685
-ardee-bohernamoe,Ardee (Bohernamoe),automatic,53.853611,-6.569444,,,,485
-dundalk-annaskeagh,Dundalk (Annaskeagh),automatic,54.051944,-6.351667,,,,585
-kilkit-wtp,Kilkit WTP,automatic,54.072778,-6.885278,,,,785
-ballinamore,Ballinamore,automatic,54.058333,-7.804167,,,,5385
-kilcogy-wwtp,Kilcogy WWTP,automatic,53.833333,-7.423056,,,,5885
-loughan-house,Loughan House,automatic,54.288889,-7.916667,,,,7985
-ballyshannon-cherrymount,Ballyshannon (Cherrymount),automatic,54.491944,-8.154167,,,,8085
-sligo-airport,Sligo Airport,automatic,54.279444,-8.598611,,,,5285
-lough-easkey-wtp,Lough Easkey WTP,automatic,54.207778,-8.866944,,,,7885
-belderrig,Belderrig,automatic,54.309722,-9.568611,,,,4485
-lisglennon-wtp,Lisglennon WTP,automatic,54.187778,-9.228333,,,,4585
-straide,Straide,automatic,53.925,-9.126389,,,,4685
-ballycroy,Ballycroy,automatic,54.057222,-9.8425,,,,4385
-bangor-erris-wwtp,Bangor Erris WWTP,automatic,54.141389,-9.748333,,,,7785
-navan-randalstown,Navan (Randalstown),automatic,53.698889,-6.715833,,,,885
-ballymore,Ballymore,automatic,53.9425,-8.326944,,,,5585
-clonmacnoise,Clonmacnoise,automatic,53.326111,-7.986667,,,,5685
-roscommon-wwtp,Roscommon WWTP,automatic,53.616944,-8.190278,,,,7585
-castlerea-wwtp,Castlerea WWTP,automatic,53.756944,-8.495556,,,,1885
-mountbellew-agr-coll,Mountbellew (Agr Coll),automatic,53.468611,-8.493333,,,,5485
-terryland-wtp,Terryland WTP,automatic,53.286111,-9.055556,,,,4085
-maam-valley,Maam Valley,automatic,53.536944,-9.608611,,,,4185
-tuam-wwtp,Tuam WWTP,automatic,53.515278,-8.880556,,,,4285
-tourmakeady-wtp,Tourmakeady WTP,automatic,53.681111,-9.371944,,,,4785
-connemara-national-park,Connemara National Park,automatic,53.551111,-9.942222,,,,3985
-doo-lough,Doo Lough,automatic,53.645278,-9.745278,,,,7685
-cloosh-forest-station,Cloosh (Forest Station),automatic,53.359722,-9.339722,,,,3885
-ashford-cronykeery,Ashford (Cronykeery),automatic,53.025,-6.075278,,,,1585
-arklow-ballyrichard-house,Arklow (Ballyrichard House),automatic,52.834167,-6.130556,,,,1785
-shanganagh-wwtp,Shanganagh WWTP,automatic,53.245278,-6.115278,,,,6185
-dublin-glasnevin,Dublin (Glasnevin),automatic,53.369722,-6.270278,,,,5985
-gort-derrybrien,Gort (Derrybrien),automatic,53.066389,-8.600278,,,,3685
-limerick-junction,Limerick Junction,automatic,52.508056,-8.203333,,,,2285
-clareville-wtp,Clareville WTP,automatic,52.701944,-8.528611,,,,3485
-carron,Carron,automatic,53.030278,-9.0775,,,,3385
-inagh-mount-callan,Inagh (Mount Callan),automatic,52.841667,-9.238333,,,,3785
-cahore-kilmichael,Cahore (Kilmichael),automatic,52.5625,-6.209444,,,,6985
-wexford-wildfowl-reserve,Wexford Wildfowl Reserve,automatic,52.357222,-6.420556,,,,185
-bunclody-wwtp,Bunclody WWTP,automatic,52.644722,-6.639444,,,,6285
-jfk-park,JFK Park,automatic,52.3175,-6.940833,,,,285
-portlaoise-wwtp,Portlaoise WWTP,automatic,53.045278,-7.3075,,,,1485
-edenderry-ballinla,Edenderry (Ballinla),automatic,53.334722,-7.145556,,,,1685
-curragh-racecourse,Curragh Racecourse,automatic,53.169167,-6.848889,,,,7385
-thomastown-mount-juliet,Thomastown (Mount Juliet),automatic,52.525,-7.190556,,,,1285
-nealstown,Nealstown,automatic,52.992778,-7.704167,,,,7485
-durrow-castlewood,Durrow (Castlewood),automatic,52.848056,-7.373889,,,,8385
-piltown-kildalton-agri-college,Piltown (Kildalton Agri. College),automatic,52.352222,-7.313056,,,,1185
-waterford-tycor,Waterford Tycor,automatic,52.254167,-7.131389,,,,1385
-cashel-ballydoyle-house,Cashel (Ballydoyle House),automatic,52.458611,-7.829167,,,,2085
-thurles-racecourse,Thurles Racecourse,automatic,52.688333,-7.832778,,,,2185
-clonmel-wwtp,Clonmel WWTP,automatic,52.358056,-7.674722,,,,6885
-adare-manor,Adare Manor,automatic,52.553889,-8.785,,,,1985
-springfield-castle,Springfield Castle,automatic,52.3525,-8.953611,,,,3285
-tulla-wtp,Tulla WTP,automatic,52.856111,-8.756944,,,,3585
-ballybunion-wwtp,Ballybunion WWTP,automatic,52.490278,-9.669722,,,,2885
-abbeyfeale-wwtp,Abbeyfeale WWTP,automatic,52.3905,-9.3078,,,,6085
-dingle-wwtp,Dingle WWTP,automatic,52.135,-10.271944,,,,6685
-dungarvan-wwtp,Dungarvan WWTP,automatic,52.080556,-7.555,,,,1085
-mount-russell,Mount Russell,automatic,52.33,-8.568889,,,,2385
-mallow-hazelwood,Mallow (Hazelwood),automatic,52.190556,-8.6525,,,,3185
-youghal-wwtp,Youghal WWTP,automatic,51.964722,-7.856667,,,,6485
-millstreet-drishane-castle,Millstreet (Drishane Castle),automatic,52.066944,-9.058611,,,,6585
-dooks-golf-club,Dooks Golf Club,automatic,52.085833,-9.924722,,,,2985
-killarney-muckross-house,Killarney (Muckross House),automatic,52.022222,-9.501389,,,,3085
-cloone-lake,Cloone Lake,automatic,51.944444,-9.875,,,,6385
-castleisland-wwtp,Castleisland WWTP,automatic,52.229444,-9.471944,,,,6785
-ballincurrig-peafield,Ballincurrig (Peafield),automatic,52.010833,-8.200556,,,,2485
-inishcarra-wtp,Inishcarra WTP,automatic,51.904167,-8.670278,,,,2685
-clonakilty-agri-college,Clonakilty (Agri. College),automatic,51.626111,-8.851111,,,,2585
-dunmanway-wwtp,Dunmanway WWTP,automatic,51.721111,-9.100278,,,,2785
-glengarriff-ilnacullin,Glengarriff (Ilnacullin),automatic,51.736389,-9.544444,,,,5785
+id,name,type,county,lat,lon,elevation_m,near,metweb_slug,station_number,official_name
+athenry,Athenry,synoptic,Galway,53.289167,-8.785556,,,athenry,,
+ballyhaise,Ballyhaise,synoptic,Cavan,54.051389,-7.309722,,Cavan,ballyhaise,,
+belmullet,Belmullet,synoptic,Mayo,54.2275,-10.006944,,,belmullet,,
+casement-aerodrome,Casement Aerodrome,synoptic,Dublin,53.306,-6.439,,Baldonnel;Clondalkin,casement,,
+claremorris,Claremorris,synoptic,Mayo,53.710833,-8.9925,,,claremorris,,
+cork-airport,Cork Airport,synoptic,Cork,51.847,-8.486,,Cork,cork,,
+dublin-airport,Dublin Airport,synoptic,Dublin,53.428,-6.241,,Swords,dublin,,
+dunsany,Dunsany,synoptic,Meath,53.515833,-6.66,,Dunshaughlin,dunsany,,
+finner,Finner,synoptic,Donegal,54.493889,-8.243056,,Bundoran,finner,,
+gurteen,Gurteen,synoptic,Tipperary,53.053056,-8.008611,,Birr,gurteen,,
+johnstown-castle,Johnstown Castle,synoptic,Wexford,52.297778,-6.496667,,Wexford,johnstown-castle,,
+knock-airport,Knock Airport,synoptic,Mayo,53.906,-8.817,,Knock;Charlestown,knock,,
+mace-head,Mace Head,synoptic,Galway,53.325833,-9.900833,,Carna,mace-head,,
+malin-head,Malin Head,synoptic,Donegal,55.372222,-7.338889,,Malin,malin-head,,
+markree,Markree,synoptic,Sligo,54.175,-8.455556,,Collooney;Sligo,markree-castle,,
+moore-park,Moore Park,synoptic,Cork,52.163889,-8.263889,,Fermoy,moore-park,,
+mount-dillon,Mount Dillon,synoptic,Roscommon,53.726944,-7.980833,,Lanesborough,mt-dillon,,
+mullingar,Mullingar,synoptic,Westmeath,53.537222,-7.362222,,,mullingar,,
+newport,Newport,synoptic,Mayo,53.922222,-9.572222,,,newport-furnace,,
+oak-park,Oak Park,synoptic,Carlow,52.861111,-6.915278,,Carlow,oak-park,,
+phoenix-park,Phoenix Park,synoptic,Dublin,53.3636,-6.3497,,Dublin,phoenix-park,,
+roches-point,Roches Point,synoptic,Cork,51.793056,-8.244444,,Whitegate;Cork Harbour,roches-point,,
+shannon-airport,Shannon Airport,synoptic,Clare,52.69,-8.918,,Shannon;Limerick,shannon,,
+sherkin-island,Sherkin Island,synoptic,Cork,51.476389,-9.427778,,Baltimore,sherkin-island,,
+valentia-observatory,Valentia Observatory,synoptic,Kerry,51.939722,-10.244444,,Valentia Island;Cahersiveen,valentia,,
+abbeyfeale,Abbeyfeale,automatic,Limerick,52.3905,-9.3078,,,,6085,ABBEYFEALE WWTP
+adare-manor,Adare Manor,automatic,Limerick,52.553889,-8.785,,Adare,,1985,ADARE MANOR
+ardara,Ardara,automatic,Donegal,54.769722,-8.420278,,,,4885,ARDARA WWTP
+ardee,Ardee (Bohernamoe),automatic,Louth,53.853611,-6.569444,,,,485,ARDEE (Bohernamoe)
+arklow,Arklow (Ballyrichard House),automatic,Wicklow,52.834167,-6.130556,,,,1785,ARKLOW (Ballyrichard House)
+ashford,Ashford (Cronykeery),automatic,Wicklow,53.025,-6.075278,,,,1585,ASHFORD (Cronykeery)
+ballinamore,Ballinamore,automatic,Leitrim,54.058333,-7.804167,,,,5385,BALLINAMORE
+ballincurrig,Ballincurrig (Peafield),automatic,Cork,52.010833,-8.200556,,,,2485,BALLINCURRIG (Peafield)
+ballybunion,Ballybunion,automatic,Kerry,52.490278,-9.669722,,,,2885,BALLYBUNION WWTP
+ballycroy,Ballycroy,automatic,Mayo,54.057222,-9.8425,,,,4385,BALLYCROY
+ballymore,Ballymore,automatic,Roscommon,53.9425,-8.326944,,Boyle,,5585,BALLYMORE
+ballyshannon,Ballyshannon (Cherrymount),automatic,Donegal,54.491944,-8.154167,,,,8085,BALLYSHANNON (Cherrymount)
+bangor-erris,Bangor Erris,automatic,Mayo,54.141389,-9.748333,,,,7785,BANGOR ERRIS WWTP
+belderrig,Belderrig,automatic,Mayo,54.309722,-9.568611,,,,4485,BELDERRIG
+bunclody,Bunclody,automatic,Wexford,52.644722,-6.639444,,,,6285,BUNCLODY WWTP
+cahore,Cahore (Kilmichael),automatic,Wexford,52.5625,-6.209444,,,,6985,CAHORE (Kilmichael)
+carron,Carron,automatic,Clare,53.030278,-9.0775,,,,3385,CARRON
+cashel,Cashel (Ballydoyle House),automatic,Tipperary,52.458611,-7.829167,,,,2085,CASHEL (Ballydoyle House)
+castleisland,Castleisland,automatic,Kerry,52.229444,-9.471944,,,,6785,CASTLEISLAND WWTP
+castlerea,Castlerea,automatic,Roscommon,53.756944,-8.495556,,,,1885,CASTLEREA WWTP
+clonakilty,Clonakilty (Agricultural College),automatic,Cork,51.626111,-8.851111,,,,2585,CLONAKILTY (Agri. College)
+clonmacnoise,Clonmacnoise,automatic,Offaly,53.326111,-7.986667,,,,5685,CLONMACNOISE
+clonmel,Clonmel,automatic,Tipperary,52.358056,-7.674722,,,,6885,CLONMEL WWTP
+cloone-lake,Cloone Lake,automatic,Kerry,51.944444,-9.875,,,,6385,CLOONE LAKE
+cloosh,Cloosh (Forest Station),automatic,Galway,53.359722,-9.339722,,,,3885,CLOOSH (Forest Station)
+connemara-national-park,Connemara National Park,automatic,Galway,53.551111,-9.942222,,Letterfrack,,3985,CONNEMARA NATIONAL PARK
+curragh-racecourse,Curragh Racecourse,automatic,Kildare,53.169167,-6.848889,,Newbridge;Kildare,,7385,CURRAGH RACECOURSE
+dingle,Dingle,automatic,Kerry,52.135,-10.271944,,,,6685,DINGLE WWTP
+doo-lough,Doo Lough,automatic,Mayo,53.645278,-9.745278,,,,7685,DOO LOUGH
+dooks-golf-club,Dooks Golf Club,automatic,Kerry,52.085833,-9.924722,,Glenbeigh,,2985,DOOKS GOLF CLUB
+dublin-glasnevin,Dublin (Glasnevin),automatic,Dublin,53.369722,-6.270278,,,,5985,DUBLIN (Glasnevin)
+dundalk,Dundalk (Annaskeagh),automatic,Louth,54.051944,-6.351667,,,,585,DUNDALK (Annaskeagh)
+dungarvan,Dungarvan,automatic,Waterford,52.080556,-7.555,,,,1085,DUNGARVAN WWTP
+dunmanway,Dunmanway,automatic,Cork,51.721111,-9.100278,,,,2785,DUNMANWAY WWTP
+durrow,Durrow (Castlewood),automatic,Laois,52.848056,-7.373889,,,,8385,DURROW (Castlewood)
+edenderry,Edenderry (Ballinla),automatic,Offaly,53.334722,-7.145556,,,,1685,EDENDERRY (Ballinla)
+emyvale,Emyvale,automatic,Monaghan,54.336667,-6.955833,,,,685,EMYVALE WWTP
+galway-terryland,Galway (Terryland),automatic,Galway,53.286111,-9.055556,,,,4085,TERRYLAND WTP
+glengarriff,Glengarriff (Ilnacullin),automatic,Cork,51.736389,-9.544444,,,,5785,GLENGARRIFF (Ilnacullin)
+glenveagh-national-park,Glenveagh National Park,automatic,Donegal,55.051389,-7.9375,,,,8185,GLENVEAGH NATIONAL PARK
+gort,Gort (Derrybrien),automatic,Galway,53.066389,-8.600278,,,,3685,GORT (Derrybrien)
+gweedore,Gweedore,automatic,Donegal,55.049167,-8.230278,,,,4985,GWEEDORE WEIR
+illies,Illies,automatic,Donegal,55.150833,-7.348056,,Buncrana,,8285,ILLIES WTP
+inagh,Inagh (Mount Callan),automatic,Clare,52.841667,-9.238333,,,,3785,INAGH (Mount Callan)
+inishcarra,Inishcarra,automatic,Cork,51.904167,-8.670278,,Ballincollig,,2685,INISHCARRA WTP
+kilcogy,Kilcogy,automatic,Cavan,53.833333,-7.423056,,,,5885,KILCOGY WWTP
+kilkit,Kilkit,automatic,Monaghan,54.072778,-6.885278,,,,785,KILKIT WTP
+killarney,Killarney (Muckross House),automatic,Kerry,52.022222,-9.501389,,,,3085,KILLARNEY (Muckross House)
+limerick-clareville,Limerick (Clareville),automatic,,52.701944,-8.528611,,,,3485,CLAREVILLE WTP
+limerick-junction,Limerick Junction,automatic,Tipperary,52.508056,-8.203333,,Tipperary,,2285,LIMERICK JUNCTION
+lisglennon,Lisglennon,automatic,Mayo,54.187778,-9.228333,,,,4585,LISGLENNON WTP
+lough-easkey,Lough Easkey,automatic,Sligo,54.207778,-8.866944,,,,7885,LOUGH EASKEY WTP
+lough-mourne,Lough Mourne,automatic,Donegal,54.7675,-7.865,,Ballybofey,,5085,LOUGH MOURNE WTP
+loughan-house,Loughan House,automatic,Cavan,54.288889,-7.916667,,Blacklion,,7985,LOUGHAN HOUSE
+maam-valley,Maam Valley,automatic,Galway,53.536944,-9.608611,,,,4185,MAAM VALLEY
+mallow,Mallow (Hazelwood),automatic,Cork,52.190556,-8.6525,,,,3185,MALLOW (Hazelwood)
+millstreet,Millstreet (Drishane Castle),automatic,Cork,52.066944,-9.058611,,,,6585,MILLSTREET (Drishane Castle)
+mount-russell,Mount Russell,automatic,,52.33,-8.568889,,,,2385,MOUNT RUSSELL
+mountbellew,Mountbellew (Agricultural College),automatic,Galway,53.468611,-8.493333,,,,5485,MOUNTBELLEW (Agr Coll)
+navan,Navan (Randalstown),automatic,Meath,53.698889,-6.715833,,,,885,NAVAN (Randalstown)
+nealstown,Nealstown,automatic,,52.992778,-7.704167,,,,7485,NEALSTOWN
+new-ross,New Ross (JFK Arboretum),automatic,Wexford,52.3175,-6.940833,,,,285,JFK PARK
+piltown,Piltown (Kildalton Agricultural College),automatic,Kilkenny,52.352222,-7.313056,,,,1185,PILTOWN (Kildalton Agri.College)
+portlaoise,Portlaoise,automatic,Laois,53.045278,-7.3075,,,,1485,PORTLAOISE WWTP
+raphoe,Raphoe (Tops),automatic,Donegal,54.849722,-7.598889,,,,5185,RAPHOE (Tops)
+roscommon,Roscommon,automatic,Roscommon,53.616944,-8.190278,,,,7585,ROSCOMMON WWTP
+shanganagh,Shanganagh,automatic,Dublin,53.245278,-6.115278,,Shankill;Bray,,6185,SHANGANAGH WWTP
+sligo-airport,Sligo Airport,automatic,Sligo,54.279444,-8.598611,,Strandhill,,5285,SLIGO AIRPORT
+springfield-castle,Springfield Castle,automatic,Limerick,52.3525,-8.953611,,Drumcollogher,,3285,SPRINGFIELD CASTLE
+straide,Straide,automatic,Mayo,53.925,-9.126389,,,,4685,STRAIDE
+thomastown,Thomastown (Mount Juliet),automatic,Kilkenny,52.525,-7.190556,,,,1285,THOMASTOWN (Mount Juliet)
+thurles-racecourse,Thurles Racecourse,automatic,Tipperary,52.688333,-7.832778,,Thurles,,2185,THURLES RACECOURSE
+tourmakeady,Tourmakeady,automatic,Mayo,53.681111,-9.371944,,,,4785,TOURMAKEADY WTP
+tuam,Tuam,automatic,Galway,53.515278,-8.880556,,,,4285,TUAM WWTP
+tulla,Tulla,automatic,Clare,52.856111,-8.756944,,,,3585,TULLA WTP
+waterford-tycor,Waterford (Tycor),automatic,Waterford,52.254167,-7.131389,,,,1385,WATERFORD TYCOR
+wexford-wildfowl-reserve,Wexford Wildfowl Reserve,automatic,Wexford,52.357222,-6.420556,,Wexford,,185,WEXFORD WILDFOWL RESERVE
+youghal,Youghal,automatic,Cork,51.964722,-7.856667,,,,6485,YOUGHAL WWTP
