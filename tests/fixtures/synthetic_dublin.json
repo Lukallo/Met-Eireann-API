@@ -1,0 +1,19 @@
+[
+  {
+    "name": "Dublin Airport",
+    "temperature": "14",
+    "symbol": "02d",
+    "weatherDescription": "Fair",
+    "text": "\"Fair\"",
+    "windSpeed": "12",
+    "windGust": "-",
+    "cardinalWindDirection": "W",
+    "windDirection": 270,
+    "humidity": "71",
+    "rainfall": "0.0",
+    "pressure": "1015",
+    "dayName": "Thursday",
+    "date": "24-09-2026",
+    "reportTime": "20:00"
+  }
+]

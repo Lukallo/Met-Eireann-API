@@ -1,0 +1,11 @@
+[Unit]
+Description=Store Met Éireann observations every hour
+
+[Timer]
+# Ten past the hour, once the previous hour's readings are published.
+OnCalendar=*-*-* *:10:00
+Persistent=true
+Unit=met-ingest@today.service
+
+[Install]
+WantedBy=timers.target

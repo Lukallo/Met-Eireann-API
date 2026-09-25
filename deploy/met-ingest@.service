@@ -1,0 +1,13 @@
+# Instance name is the feed: met-ingest@today.service, met-ingest@yesterday.service
+[Unit]
+Description=Met Éireann ingest (%i feed)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=met-api
+Group=met-api
+WorkingDirectory=/opt/met-eireann-api
+EnvironmentFile=/etc/met-api.env
+ExecStart=/opt/met-eireann-api/.venv/bin/flask --app met_api ingest --feed %i

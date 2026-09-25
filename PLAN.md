@@ -162,134 +162,100 @@ Envelope:
 
 ### SQLite schema
 
-```sql
-PRAGMA journal_mode = WAL;          -- lets Flask read while the ingest job writes
+The schema is in [`met_api/schema.sql`](met_api/schema.sql). There are three tables:
 
-CREATE TABLE stations (
-    id           TEXT PRIMARY KEY,  -- 'athenry'
-    name         TEXT NOT NULL,
-    type         TEXT NOT NULL CHECK (type IN ('synoptic', 'automatic')),
-    lat          REAL NOT NULL,
-    lon          REAL NOT NULL,
-    elevation_m  REAL,
-    county       TEXT,
-    metweb_slug  TEXT UNIQUE,       -- upstream key; NULL means no live feed
-    active       INTEGER NOT NULL DEFAULT 1
-);
-
-CREATE TABLE observations (
-    station_id          TEXT NOT NULL REFERENCES stations(id),
-    observed_at         TEXT NOT NULL,  -- UTC 'YYYY-MM-DDTHH:MM:SSZ'
-    local_date          TEXT NOT NULL,  -- Europe/Dublin 'YYYY-MM-DD', for daily summaries
-    temperature_c       REAL,
-    humidity_pct        INTEGER,
-    pressure_hpa        REAL,
-    rainfall_mm         REAL,
-    wind_speed_kt       INTEGER,
-    wind_gust_kt        INTEGER,
-    wind_dir_deg        INTEGER,
-    wind_dir_cardinal   TEXT,
-    weather_symbol      TEXT,
-    weather_description TEXT,
-    raw_json            TEXT NOT NULL,  -- untouched upstream record
-    fetched_at          TEXT NOT NULL,
-    PRIMARY KEY (station_id, observed_at)
-) WITHOUT ROWID;
-
-CREATE INDEX obs_by_day  ON observations (station_id, local_date);
-CREATE INDEX obs_by_time ON observations (observed_at);   -- national "latest" and extremes
-
-CREATE TABLE ingest_runs (
-    id            INTEGER PRIMARY KEY,
-    station_id    TEXT NOT NULL,
-    started_at    TEXT NOT NULL,
-    feed          TEXT NOT NULL,    -- 'today' or 'yesterday'
-    http_status   INTEGER,
-    rows_upserted INTEGER,
-    error         TEXT
-);
-```
+- `stations`, loaded from `met_api/data/stations.csv`,
+- `observations`, keyed on `(station_id, observed_at)`, holding the raw JSON too,
+- `ingest_runs`, one row per fetch attempt.
 
 Notes on the schema:
 
+- **WAL mode** lets the API read while the ingest job writes.
 - **Writes are upserts**, using `INSERT ... ON CONFLICT (station_id, observed_at) DO UPDATE`.
   Polling the same hour twice is harmless, and a revised value replaces the old one.
 - **Values are stored in source units** (knots). Other units are worked out when a response is
   built, so no precision is lost.
 - **`local_date` is stored** because SQLite has no timezone support. Grouping by Irish calendar
   day is then a plain `GROUP BY local_date`.
-- **Size is not a concern.** 25 stations × 24 hours × 365 days is about 220,000 rows a year,
-  roughly 100 MB with the raw JSON included.
+- **Size and speed are not a concern.** 25 stations × 24 hours × 365 days is about 220,000 rows
+  a year. Benchmarked on a year of synthetic data:
+  - latest for every station: 0.8 ms,
+  - a week of history: 0.3 ms,
+  - health: 0.2 ms.
+
+  The "latest" query uses `CROSS JOIN` to force a per-station lookup. Without it, SQLite
+  scanned the whole table and took about 350 ms.
 - **Nearest-station search needs no spatial index.** With about 100 stations, computing haversine
   distance in Python is instant.
 
 ### Runtime layout
 
 ```
-cron  :10 past every hour  ──▶  flask --app met_api ingest              (today feed, all stations)
-cron  00:20 daily          ──▶  flask --app met_api ingest --yesterday  (fills any gaps)
+timer :10 past every hour  ──▶  flask --app met_api ingest                   (today feed, all stations)
+timer 00:20 Irish time     ──▶  flask --app met_api ingest --feed yesterday  (fills any gaps)
                                         │ upsert
                                         ▼
                                   met.sqlite3 (WAL)
                                         ▲ read-only queries
-clients ──▶ gunicorn "met_api:create_app()" ──▶ Flask blueprint /v1
+clients ──▶ gunicorn wsgi:app ──▶ Flask blueprint /v1
 ```
 
-Ingestion is a **Flask CLI command run by cron or a systemd timer**, not a scheduler inside the web
-app. Gunicorn runs several workers, and a scheduler inside the app would run once in each of them.
-Keeping ingestion separate also means a web restart never interrupts it.
+Ingestion is a **Flask CLI command run by a systemd timer or cron**, not a scheduler inside the
+web app. Gunicorn runs several workers, and a scheduler inside the app would run once in each of
+them. Keeping ingestion separate also means a web restart never interrupts it. The units are in
+`deploy/`.
 
-### Proposed layout
+### Code layout
 
 ```
 met_api/
-  __init__.py        # create_app(), registers blueprint and the `ingest` / `init-db` CLI commands
-  config.py          # DB path, upstream base URL, timeouts (environment variables)
+  __init__.py        # create_app(): config (MET_API_* env vars), blueprint, error handlers, CLI
   schema.sql
-  db.py              # connection per request (WAL, Row factory), upserts, query helpers
-  stations.py        # load data/stations.csv into the stations table, nearest(), bbox filter
+  db.py              # connections, schema, upserts, the queries the API uses
+  stations.py        # load data/stations.csv, by_distance(), nearest(), in_bbox()
   geo.py             # haversine
-  upstream.py        # fetch /observations/{slug}/{today|yesterday} and normalise to a dict
-  ingest.py          # loop over stations → upstream → upsert, log to ingest_runs
-  api.py             # /v1 blueprint: routes, envelope, errors, csv/geojson output
+  timeutil.py        # UTC formatting, query-string time parsing
+  upstream.py        # fetch /observations/{slug}/{today|yesterday} and normalise
+  ingest.py          # loop over stations → fetch → upsert, log to ingest_runs
+  cli.py             # flask init-db / ingest / probe
+  api.py             # /v1 blueprint: routes, envelope, problem+json errors
   data/stations.csv
-tests/
-  fixtures/*.json    # real captured upstream responses
-  test_stations.py test_upstream.py test_ingest.py test_api.py
+tests/               # pytest: stations, upstream parsing, ingest + CLI, API
+deploy/              # systemd service + timers, env file example
 wsgi.py
-requirements.txt     # flask, requests, gunicorn (pytest for dev)
 ```
 
 ## 4. Delivery phases
 
-0. **Fix `met.py`.** Add the `haversine` import and correct the five duplicated coordinate pairs.
-1. **Station registry and schema.** Build `stations.csv` from verified coordinates, then the
-   `init-db` command and `nearest()`. Add tests for:
+0. ✅ **Fix `met.py`.** Added the `haversine` import and corrected the five duplicated coordinate
+   pairs.
+1. ✅ **Station registry and schema.** Built `stations.csv` (25 synoptic and 78 automatic
+   stations), the `init-db` command and `nearest()`. Tests cover:
    - unique IDs,
    - no two stations sharing coordinates,
    - every point lying inside Ireland.
+2. ◐ **Upstream client and ingestion.** Done: the normaliser handles numbers sent as strings,
+   missing-value markers, DST (including the repeated 01:00 in October) and midnight. Also done:
+   the `ingest` and `probe` commands and the timers.
 
-   None of this phase needs network access.
-2. **Upstream client and ingestion.** Start this as early as possible, because history only
-   accrues from the day it starts.
-   1. Capture real responses as test fixtures.
-   2. Normalise them, handling:
-      - numbers sent as strings,
-      - missing-value markers,
-      - DST and midnight rollover.
-   3. Add the `ingest` command and the cron entries.
-   4. Deploy just this part.
-3. **Flask API, minimum viable product.** Stations, nearest, latest, history and health.
+   Still to do:
+   1. Capture real responses with `flask probe --save tests/fixtures/real`.
+   2. Confirm the format.
+   3. Deploy.
+3. ✅ **Flask API, minimum viable product.** Stations, nearest, latest, history (paginated) and
+   health.
 4. **Aggregates and formats.** Daily summaries, extremes, records, CSV and GeoJSON.
 5. **Later.** Forecast, warnings and alerts. Also consider backfilling from the historical CSVs.
-6. **Ship.** Add a Dockerfile or systemd units, a README with curl examples, CI running pytest,
-   and a nightly backup of the SQLite file.
+6. ◐ **Ship.** Done: systemd units, README and CI. Still to do: a nightly backup of the SQLite
+   file, and a reverse proxy.
 
 ## 5. Open questions
 
 - **Which feed do the `auto_stations` (IDs ending in `85`) come from?** The `/observations` endpoint
-  uses slugs, so these need a different source. If none exists, keep them in the registry with
-  `metweb_slug = NULL`, so they can still be found but never polled.
+  uses slugs, so these need a different source. For now they are in the registry with
+  `metweb_slug` empty, so they can be found but are never polled.
+- **Are the corrected coordinates right?** Those for `casement`, `cork`, `dublin`, `knock` and
+  `shannon` are approximate. Check them against Met Éireann's station list.
 - **Where will it run?** Ingestion needs a machine that is always on, such as a VPS or a
   Raspberry Pi, and that machine must be able to reach `prodapi.metweb.ie`.
 - **Is the API public?** If so, it needs rate limiting and perhaps API keys.

@@ -1,0 +1,10 @@
+[Unit]
+Description=Re-fetch yesterday's Met Éireann observations to fill any gaps
+
+[Timer]
+OnCalendar=*-*-* 00:20:00 Europe/Dublin
+Persistent=true
+Unit=met-ingest@yesterday.service
+
+[Install]
+WantedBy=timers.target
