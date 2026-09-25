@@ -21,9 +21,9 @@ def test_init_db_loads_registry(conn):
 
 def test_sync_marks_removed_stations_inactive(conn, registry):
     from met_api import db
-    db.sync_stations(conn, [s for s in registry.values() if s["id"] != "valentia"])
+    db.sync_stations(conn, [s for s in registry.values() if s["id"] != "valentia-observatory"])
     assert count(conn, "stations", "active = 1") == 102
-    assert count(conn, "stations", "id = 'valentia' AND active = 0") == 1
+    assert count(conn, "stations", "id = 'valentia-observatory' AND active = 0") == 1
 
 
 def test_ingest_stores_rows_and_logs_run(conn, registry):
@@ -58,10 +58,10 @@ def test_one_station_failing_does_not_stop_the_rest(conn, registry):
             raise RuntimeError("parser bug")
         return 200, ATHENRY
 
-    picked = [registry[i] for i in ("cork", "dublin", "athenry")]
+    picked = [registry[i] for i in ("cork-airport", "dublin-airport", "athenry")]
     results = {r.station_id: r for r in ingest(conn, picked, "today", fetch)}
-    assert results["cork"].http_status == 404 and "HTTP 404" in results["cork"].error
-    assert results["dublin"].error == "RuntimeError: parser bug"
+    assert results["cork-airport"].http_status == 404 and "HTTP 404" in results["cork-airport"].error
+    assert results["dublin-airport"].error == "RuntimeError: parser bug"
     assert results["athenry"].rows == 5 and results["athenry"].error is None
     assert count(conn, "ingest_runs") == 3
 
@@ -110,9 +110,15 @@ def test_cli_ingest_all_polls_every_synoptic_station(app, fake_fetch):
 
 
 def test_cli_ingest_exits_non_zero_when_everything_fails(app, fake_fetch):
-    result = app.test_cli_runner().invoke(args=["ingest", "--station", "cork"])
+    result = app.test_cli_runner().invoke(args=["ingest", "--station", "cork-airport"])
     assert result.exit_code == 1
     assert "FAIL" in result.output
+
+
+def test_cli_accepts_met_eireann_ids(app, fake_fetch):
+    result = app.test_cli_runner().invoke(args=["ingest", "--station", "cork"])
+    assert "cork-airport" in result.output
+    assert fake_fetch == [("cork", "today")]
 
 
 def test_cli_rejects_station_without_feed(app, fake_fetch):
@@ -130,3 +136,6 @@ def test_cli_probe_saves_raw_responses(app, fake_fetch, tmp_path):
     assert "ok   athenry/today" in result.output
     assert "FAIL cork/today" in result.output
     assert "Normalised as:" in result.output
+    assert "ok      rainfall: went down during the day" in result.output
+    assert "times:" in result.output
+    assert "wind units: athenry" in result.output

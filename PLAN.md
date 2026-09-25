@@ -230,32 +230,49 @@ wsgi.py
 0. ✅ **Fix `met.py`.** Added the `haversine` import and corrected the five duplicated coordinate
    pairs.
 1. ✅ **Station registry and schema.** Built `stations.csv` (25 synoptic and 78 automatic
-   stations), the `init-db` command and `nearest()`. Tests cover:
-   - unique IDs,
-   - no two stations sharing coordinates,
-   - every point lying inside Ireland.
-2. ◐ **Upstream client and ingestion.** Done: the normaliser handles numbers sent as strings,
-   missing-value markers, DST (including the repeated 01:00 in October) and midnight. Also done:
-   the `ingest` and `probe` commands and the timers.
-
-   Still to do:
-   1. Capture real responses with `flask probe --save tests/fixtures/real`.
-   2. Confirm the format.
-   3. Deploy.
-3. ✅ **Flask API, minimum viable product.** Stations, nearest, latest, history (paginated) and
-   health.
-4. **Aggregates and formats.** Daily summaries, extremes, records, CSV and GeoJSON.
-5. **Later.** Forecast, warnings and alerts. Also consider backfilling from the historical CSVs.
-6. ◐ **Ship.** Done: systemd units, README and CI. Still to do: a nightly backup of the SQLite
-   file, and a reverse proxy.
+   stations), the `init-db` command and `nearest()`.
+2. ◐ **Upstream client and ingestion.** Done: the normaliser, the `ingest` and `probe` commands,
+   and the timers. Still to do: run `flask probe --save tests/fixtures/real` against the live
+   feed and act on its "Checks" section.
+3. ✅ **Flask API, minimum viable product.** Stations, nearest, latest, history and health.
+4. ✅ **Cleanup, v1.1.** Organisation, usability and accuracy:
+   - **Stations:**
+     - readable IDs (`dublin-airport`), with Met Éireann's IDs redirecting (301) to ours,
+     - automatic station names without facility codes,
+     - counties for all but three stations,
+     - nearby towns for search (`?q=carlow` finds Oak Park),
+     - stations without live readings hidden unless `all=true`.
+   - **Requests:** unknown query parameters are rejected, and a mistyped station ID gets a
+     "did you mean" suggestion.
+   - **Readings:**
+     - impossible values become `null` with a flag,
+     - `pressure_msl_hpa`,
+     - wind degrees only when Met Éireann reports them (never estimated from the compass point),
+     - numbers as precise as reported.
+   - **History and summaries:** history reports gaps (`meta.coverage`) and can fill them
+     (`fill=true`). Daily summaries count 23 or 25 hours on clock-change days.
+   - **Nearest reading:** limited to 80 km by default (everywhere in Ireland is within 80 km of
+     a main station).
+   - **Docs:** interactive at `/docs` (OpenAPI 3.1), tested against the routes so they can't
+     drift.
+   - **Upgrades:** version 1 databases upgrade in place, keeping history under the new IDs.
+5. **Next.**
+   - Beaufort force.
+   - CSV and GeoJSON output.
+   - Extremes ("hottest, wettest, windiest station today") and all-time station records.
+   - Forecasts, warnings, alerts.
+   - Backfill from Met Éireann's historical CSVs.
+6. ◐ **Ship.** Done: systemd units, a Caddyfile for `api.lcvetkovic.com`, README and CI. Still to
+   do: deploy, set up DNS, and schedule a nightly backup of the SQLite file.
 
 ## 5. Open questions
 
-- **Which feed do the `auto_stations` (IDs ending in `85`) come from?** The `/observations` endpoint
-  uses slugs, so these need a different source. For now they are in the registry with
-  `metweb_slug` empty, so they can be found but are never polled.
-- **Are the corrected coordinates right?** Those for `casement`, `cork`, `dublin`, `knock` and
-  `shannon` are approximate. Check them against Met Éireann's station list.
-- **Where will it run?** Ingestion needs a machine that is always on, such as a VPS or a
-  Raspberry Pi, and that machine must be able to reach `prodapi.metweb.ie`.
-- **Is the API public?** If so, it needs rate limiting and perhaps API keys.
+- **Which feed do the automatic stations come from?** The `/observations` endpoint uses slugs, so
+  these need a different source. For now they can be found (`all=true`) but are never polled.
+- **Are the corrected coordinates right?** Check those for Casement Aerodrome, Cork Airport,
+  Dublin Airport, Knock Airport and Shannon Airport against Met Éireann's station list. Station
+  heights (`elevation_m`) also need filling in.
+- **Which county are these in?** Limerick (Clareville), Nealstown and Mount Russell. They are
+  left blank rather than guessed.
+- **Is the API public?** It will be at `api.lcvetkovic.com`, so it may need rate limiting
+  (Caddy can do this) and caching headers.

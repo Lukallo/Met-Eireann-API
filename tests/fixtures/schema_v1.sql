@@ -1,18 +1,15 @@
 -- Idempotent: run on every `flask init-db` and `flask ingest`.
--- Databases made by older versions are brought up to date by db.migrate().
 
 CREATE TABLE IF NOT EXISTS stations (
-    id             TEXT PRIMARY KEY,   -- 'dublin-airport', 'galway-terryland'
+    id             TEXT PRIMARY KEY,   -- 'athenry', 'glenveagh-national-park'
     name           TEXT NOT NULL,
     type           TEXT NOT NULL CHECK (type IN ('synoptic', 'automatic')),
-    county         TEXT,
     lat            REAL NOT NULL,
     lon            REAL NOT NULL,
     elevation_m    REAL,
-    near           TEXT,               -- ';'-separated nearby towns, for search
-    metweb_slug    TEXT UNIQUE,        -- Met Éireann's key ('dublin'); NULL means no live feed
-    station_number INTEGER UNIQUE,     -- Met Éireann's number for automatic stations
-    official_name  TEXT,               -- Met Éireann's spelling of the name
+    county         TEXT,
+    metweb_slug    TEXT UNIQUE,        -- key on prodapi.metweb.ie; NULL means no live feed
+    station_number INTEGER UNIQUE,     -- numeric ID for automatic stations
     active         INTEGER NOT NULL DEFAULT 1
 );
 
@@ -22,7 +19,7 @@ CREATE TABLE IF NOT EXISTS observations (
     local_date          TEXT NOT NULL,  -- Europe/Dublin 'YYYY-MM-DD', for daily summaries
     temperature_c       REAL,
     humidity_pct        INTEGER,
-    pressure_msl_hpa    REAL,           -- mean sea level pressure
+    pressure_hpa        REAL,
     rainfall_mm         REAL,
     wind_speed_kt       INTEGER,
     wind_gust_kt        INTEGER,

@@ -1,15 +1,17 @@
-"""SQLite access: connections, schema, writes, and the queries the API uses."""
+"""SQLite access: connections, schema and migrations, writes, and the queries the API uses."""
 
 import sqlite3
 from pathlib import Path
 
 from flask import current_app, g
 
+from .quality import valid_sql
+
 SCHEMA = (Path(__file__).parent / "schema.sql").read_text(encoding="utf-8")
 
 OBSERVATION_COLUMNS = (
     "station_id", "observed_at", "local_date",
-    "temperature_c", "humidity_pct", "pressure_hpa", "rainfall_mm",
+    "temperature_c", "humidity_pct", "pressure_msl_hpa", "rainfall_mm",
     "wind_speed_kt", "wind_gust_kt", "wind_dir_deg", "wind_dir_cardinal",
     "weather_symbol", "weather_description",
     "raw_json", "fetched_at",
@@ -23,8 +25,8 @@ UPSERT_OBSERVATION = (
     + ", ".join(f"{c} = excluded.{c}" for c in OBSERVATION_COLUMNS if c not in _KEY)
 )
 
-STATION_COLUMNS = ("id", "name", "type", "lat", "lon", "elevation_m", "county",
-                   "metweb_slug", "station_number")
+STATION_COLUMNS = ("id", "name", "type", "county", "lat", "lon", "elevation_m", "near",
+                   "metweb_slug", "station_number", "official_name")
 
 UPSERT_STATION = (
     f"INSERT INTO stations ({', '.join(STATION_COLUMNS)}, active) "
@@ -38,7 +40,7 @@ UPSERT_STATION = (
 # the join: it walks the ~100 stations and does two primary-key lookups each,
 # instead of scanning every stored observation (0.5 ms vs 350 ms on a year of data).
 _LATEST = """
-SELECT o.*, s.name AS station_name, s.type AS station_type,
+SELECT o.*, s.name AS station_name, s.county AS station_county,
        s.lat AS station_lat, s.lon AS station_lon
 FROM stations s
 CROSS JOIN observations o
@@ -73,16 +75,60 @@ def init_db(conn):
     # WAL lets the API read while the ingest job writes. The setting persists in the file.
     conn.execute("PRAGMA journal_mode = WAL")
     conn.executescript(SCHEMA)
+    migrate(conn)
+
+
+def _columns(conn, table):
+    return {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+
+
+def migrate(conn):
+    """Bring a database made by an older version up to date. Safe to run repeatedly."""
+    with conn:
+        station_columns = _columns(conn, "stations")
+        for column in ("county", "near", "official_name"):
+            if column not in station_columns:
+                conn.execute(f"ALTER TABLE stations ADD COLUMN {column} TEXT")
+        if "pressure_hpa" in _columns(conn, "observations"):
+            conn.execute("ALTER TABLE observations RENAME COLUMN pressure_hpa TO pressure_msl_hpa")
 
 
 def sync_stations(conn, stations):
-    """Make the stations table match the registry. Stations no longer listed become inactive."""
-    ids = [s["id"] for s in stations]
+    """Make the stations table match the registry.
+
+    A station whose ID changed (matched on its Met Éireann slug or number)
+    keeps its history under the new ID. Stations no longer listed become
+    inactive. Returns ``[(old_id, new_id), ...]`` for any renames.
+    """
+    renames = []
     with conn:
+        for s in stations:
+            for (old_id,) in conn.execute(
+                "SELECT id FROM stations WHERE id != ? AND (metweb_slug = ? OR station_number = ?)",
+                (s["id"], s["metweb_slug"], s["station_number"]),
+            ).fetchall():
+                # Free the unique keys so the new row can take them.
+                conn.execute(
+                    "UPDATE stations SET metweb_slug = NULL, station_number = NULL, active = 0"
+                    " WHERE id = ?", (old_id,),
+                )
+                renames.append((old_id, s["id"]))
+
         conn.executemany(UPSERT_STATION, stations)
+
+        for old_id, new_id in renames:
+            conn.execute("UPDATE OR IGNORE observations SET station_id = ? WHERE station_id = ?",
+                         (new_id, old_id))
+            conn.execute("DELETE FROM observations WHERE station_id = ?", (old_id,))
+            conn.execute("UPDATE ingest_runs SET station_id = ? WHERE station_id = ?",
+                         (new_id, old_id))
+            conn.execute("DELETE FROM stations WHERE id = ?", (old_id,))
+
+        ids = [s["id"] for s in stations]
         conn.execute(
             f"UPDATE stations SET active = 0 WHERE id NOT IN ({', '.join('?' * len(ids))})", ids
         )
+    return renames
 
 
 def upsert_observations(conn, rows):
@@ -112,6 +158,13 @@ def get_station(conn, station_id):
     ).fetchone()
 
 
+def station_by_slug(conn, slug):
+    """The station Met Éireann calls ``slug``, for redirecting their IDs to ours."""
+    return conn.execute(
+        "SELECT * FROM stations WHERE metweb_slug = ? AND active = 1", (slug,)
+    ).fetchone()
+
+
 def latest_observations(conn, station_ids=None):
     """Latest observation for every active station (or only those listed)."""
     if station_ids is None:
@@ -128,7 +181,7 @@ def latest_observation(conn, station_id):
     ).fetchone()
 
 
-def observations_between(conn, station_id, start, end, after=None, limit=500):
+def observations_between(conn, station_id, start, end, after=None, limit=None):
     """Rows with ``start <= observed_at <= end`` (and ``> after``), oldest first."""
     sql = ("SELECT * FROM observations WHERE station_id = ? "
            "AND observed_at >= ? AND observed_at <= ?")
@@ -136,9 +189,47 @@ def observations_between(conn, station_id, start, end, after=None, limit=500):
     if after is not None:
         sql += " AND observed_at > ?"
         params.append(after)
-    sql += " ORDER BY observed_at LIMIT ?"
-    params.append(limit)
+    sql += " ORDER BY observed_at"
+    if limit is not None:
+        sql += " LIMIT ?"
+        params.append(limit)
     return conn.execute(sql, params).fetchall()
+
+
+def observation_times(conn, station_id, start, end):
+    """Just the timestamps stored in a window, for working out gaps."""
+    return [
+        row[0] for row in conn.execute(
+            "SELECT observed_at FROM observations WHERE station_id = ?"
+            " AND observed_at >= ? AND observed_at <= ? ORDER BY observed_at",
+            (station_id, start, end),
+        )
+    ]
+
+
+def daily_summaries(conn, station_id, first_date, last_date):
+    """One row per Irish calendar day that has data. Impossible values are left out."""
+    v = valid_sql
+    return conn.execute(
+        f"""
+        SELECT local_date,
+               COUNT(*)                         AS hours_reported,
+               MIN({v('temperature_c')})        AS temperature_min_c,
+               MAX({v('temperature_c')})        AS temperature_max_c,
+               AVG({v('temperature_c')})        AS temperature_mean_c,
+               SUM({v('rainfall_mm')})          AS rainfall_total_mm,
+               MAX({v('wind_speed_kt')})        AS wind_speed_max_kt,
+               MAX({v('wind_gust_kt')})         AS wind_gust_max_kt,
+               AVG({v('humidity_pct')})         AS humidity_mean_pct,
+               MIN({v('pressure_msl_hpa')})     AS pressure_msl_min_hpa,
+               MAX({v('pressure_msl_hpa')})     AS pressure_msl_max_hpa
+        FROM observations
+        WHERE station_id = ? AND local_date BETWEEN ? AND ?
+        GROUP BY local_date
+        ORDER BY local_date
+        """,
+        (station_id, first_date, last_date),
+    ).fetchall()
 
 
 def ingest_status(conn):
@@ -155,6 +246,6 @@ def ingest_status(conn):
             ORDER BY started_at DESC, id DESC LIMIT 1
         )
         WHERE s.active = 1 AND s.metweb_slug IS NOT NULL
-        ORDER BY s.id
+        ORDER BY s.name
         """
     ).fetchall()

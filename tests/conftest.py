@@ -46,11 +46,11 @@ def conn(app):
 
 @pytest.fixture
 def client(app, conn, registry):
-    """Athenry has five fresh hourly readings; Dublin has one, ten hours old."""
+    """Athenry has five fresh hourly readings; Dublin Airport has one, ten hours old."""
     payloads = {
         "athenry": load_fixture("synthetic_athenry_today.json"),
         "dublin": load_fixture("synthetic_dublin.json"),
     }
-    ingest(conn, [registry["athenry"], registry["dublin"]], "today",
+    ingest(conn, [registry["athenry"], registry["dublin-airport"]], "today",
            lambda slug, feed: (200, payloads[slug]))
     return app.test_client()

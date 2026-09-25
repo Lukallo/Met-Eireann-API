@@ -1,0 +1,7 @@
+# Caddy config for the public instance. Copy to /etc/caddy/Caddyfile and run
+# `sudo systemctl reload caddy`. Caddy gets and renews the HTTPS certificate itself
+# once DNS for the name points at this server and ports 80 and 443 are open.
+api.lcvetkovic.com {
+    encode gzip
+    reverse_proxy 127.0.0.1:8000
+}

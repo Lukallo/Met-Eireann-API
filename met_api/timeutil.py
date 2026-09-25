@@ -1,11 +1,15 @@
 """Timestamp helpers. Stored and returned times are UTC ``YYYY-MM-DDTHH:MM:SSZ``."""
 
 import re
-from datetime import datetime, timezone
+from datetime import datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 IRISH_TZ = ZoneInfo("Europe/Dublin")
 ISO_Z = "%Y-%m-%dT%H:%M:%SZ"
+HOUR = timedelta(hours=1)
+
+# How long after the hour a reading is expected to have been published and stored.
+READING_DELAY = timedelta(hours=1)
 
 
 def utcnow():
@@ -34,3 +38,38 @@ def parse_query_time(text):
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(timezone.utc)
+
+
+def floor_hour(dt):
+    return dt.replace(minute=0, second=0, microsecond=0)
+
+
+def hour_slots(start, end):
+    """Every whole hour from ``start`` to ``end`` inclusive, as ``...Z`` strings."""
+    slot = floor_hour(start)
+    if slot < start:
+        slot += HOUR
+    slots = []
+    while slot <= end:
+        slots.append(to_iso(slot))
+        slot += HOUR
+    return slots
+
+
+def due_by(now):
+    """The latest hour whose reading should be stored by ``now``."""
+    return floor_hour(now - READING_DELAY)
+
+
+def irish_date(dt):
+    return dt.astimezone(IRISH_TZ).date()
+
+
+def irish_day_bounds(day):
+    """UTC start (inclusive) and end (exclusive) of an Irish calendar day.
+
+    The day is 23 or 25 hours long when the clocks change.
+    """
+    start = datetime.combine(day, time(), IRISH_TZ)
+    end = datetime.combine(day + timedelta(days=1), time(), IRISH_TZ)
+    return start.astimezone(timezone.utc), end.astimezone(timezone.utc)
